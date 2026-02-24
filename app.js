@@ -20,6 +20,7 @@ const metricsTitle = document.getElementById("metricsTitle");
 const apiNotice = document.getElementById("apiNotice");
 const apiRetry = document.getElementById("apiRetry");
 const loadingState = document.getElementById("loadingState");
+const prefetchState = document.getElementById("prefetchState");
 const metricsSkeleton = document.getElementById("metricsSkeleton");
 const simulatorInput = document.getElementById("simAmount");
 const simulatorResult = document.getElementById("simResult");
@@ -44,6 +45,7 @@ const COUNTRY_CATALOG = [
 ];
 
 const inflationCache = new Map();
+const prefetchStatus = new Map();
 let metricsView = "A";
 
 const monthLabels = [
@@ -516,11 +518,56 @@ async function loadCountryData(code) {
 }
 
 function prefetchAllCountries() {
-  Promise.all(
-    COUNTRY_CATALOG.map((country) =>
-      loadCountryData(country.code).catch(() => null)
-    )
-  ).catch(() => null);
+  if (prefetchState) {
+    prefetchState.classList.remove("is-hidden");
+  }
+  const total = COUNTRY_CATALOG.length;
+  let completed = 0;
+
+  const updateProgress = () => {
+    if (!prefetchState) {
+      return;
+    }
+    prefetchState.textContent = `Precargando ${completed}/${total}`;
+  };
+
+  const withTimeout = (promise, ms) =>
+    Promise.race([
+      promise,
+      new Promise((resolve) => {
+        setTimeout(() => resolve(null), ms);
+      })
+    ]);
+
+  updateProgress();
+
+  const updateOptionStatus = (code, status) => {
+    const selectors = [countrySelect, countrySelectB].filter(Boolean);
+    selectors.forEach((select) => {
+      const option = Array.from(select.options).find((item) => item.value === code);
+      if (!option) {
+        return;
+      }
+      const baseLabel = option.dataset.label || option.textContent || "";
+      option.dataset.label = baseLabel.replace(" (pendiente)", "");
+      option.textContent =
+        status === "pending" ? `${option.dataset.label} (pendiente)` : option.dataset.label;
+    });
+  };
+
+  (async () => {
+    for (const country of COUNTRY_CATALOG) {
+      const data = await withTimeout(loadCountryData(country.code), 2000).catch(() => null);
+      const ok = data && Array.isArray(data.series) && data.series.length > 0;
+      prefetchStatus.set(country.code, ok ? "ready" : "pending");
+      updateOptionStatus(country.code, ok ? "ready" : "pending");
+      completed += 1;
+      updateProgress();
+    }
+    if (prefetchState) {
+      prefetchState.classList.add("is-hidden");
+    }
+  })();
 }
 
 function setLegendNames(primary, secondary) {
@@ -563,6 +610,7 @@ function init() {
     const option = document.createElement("option");
     option.value = country.code;
     option.textContent = country.name;
+    option.dataset.label = country.name;
     if (index === 0) {
       option.selected = true;
     }
@@ -580,6 +628,7 @@ function init() {
       const option = document.createElement("option");
       option.value = country.code;
       option.textContent = country.name;
+      option.dataset.label = country.name;
       countrySelectB.appendChild(option);
     });
   }
@@ -602,8 +651,14 @@ function init() {
 
     try {
       activeCountry = await loadCountryData(selectedCode);
+      if (activeCountry && Array.isArray(activeCountry.series) && activeCountry.series.length > 0) {
+        prefetchStatus.set(selectedCode, "ready");
+      }
       if (countrySelectB && !countrySelectB.disabled && countrySelectB.value) {
         activeCountryB = await loadCountryData(countrySelectB.value);
+        if (activeCountryB && Array.isArray(activeCountryB.series) && activeCountryB.series.length > 0) {
+          prefetchStatus.set(countrySelectB.value, "ready");
+        }
       } else {
         activeCountryB = null;
       }
