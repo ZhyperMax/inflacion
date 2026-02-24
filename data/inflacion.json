@@ -1,0 +1,23 @@
+{
+  "countries": [
+    {
+      "code": "AR",
+      "name": "Argentina",
+      "currency": "ARS",
+      "series": [
+        { "month": "2024-03", "value": 11.0 },
+        { "month": "2024-04", "value": 8.8 },
+        { "month": "2024-05", "value": 6.2 },
+        { "month": "2024-06", "value": 5.4 },
+        { "month": "2024-07", "value": 4.7 },
+        { "month": "2024-08", "value": 5.1 },
+        { "month": "2024-09", "value": 6.0 },
+        { "month": "2024-10", "value": 4.9 },
+        { "month": "2024-11", "value": 4.2 },
+        { "month": "2024-12", "value": 3.9 },
+        { "month": "2025-01", "value": 4.4 },
+        { "month": "2025-02", "value": 4.1 }
+      ]
+    }
+  ]
+}
