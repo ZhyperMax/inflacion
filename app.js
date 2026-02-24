@@ -552,8 +552,8 @@ function updateSimulator(country, secondary) {
 }
 
 async function fetchMonthlyInflationAR() {
-  const seriesId = "103.1_I2N_2016_M_15";
-  const url = `https://apis.datos.gob.ar/series/api/series?ids=${seriesId}:percent_change_a_year_ago&last=12`;
+  const seriesId = "145.3_INGNACUAL_DICI_M_38";
+  const url = `https://apis.datos.gob.ar/series/api/series?ids=${seriesId}&last=12&format=json`;
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error("No se pudo cargar la serie mensual");
