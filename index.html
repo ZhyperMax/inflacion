@@ -40,14 +40,21 @@
 
       <div class="metrics-header">
         <div class="metrics-title" id="metricsTitle">Resumen: --</div>
+        <div class="loading-pill is-hidden" id="loadingState">Cargando...</div>
         <div class="segmented is-hidden" id="metricsToggle">
           <button class="segmented-btn is-active" type="button" id="metricsBtnA">Pais A</button>
           <button class="segmented-btn" type="button" id="metricsBtnB">Pais B</button>
         </div>
       </div>
       <div class="notice is-hidden" id="apiNotice">
-        Sin datos disponibles para el pais seleccionado. Intentar mas tarde.
+        <span>Sin datos disponibles para el pais seleccionado. Intentar mas tarde.</span>
+        <button class="btn-ghost btn-small" type="button" id="apiRetry">Reintentar</button>
       </div>
+      <section class="cards skeleton is-hidden" id="metricsSkeleton" aria-hidden="true">
+        <div class="card skeleton-card"></div>
+        <div class="card skeleton-card"></div>
+        <div class="card skeleton-card"></div>
+      </section>
       <section class="cards" id="metrics"></section>
 
       <section class="panel">

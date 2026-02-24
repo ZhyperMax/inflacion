@@ -18,6 +18,9 @@ const metricsBtnA = document.getElementById("metricsBtnA");
 const metricsBtnB = document.getElementById("metricsBtnB");
 const metricsTitle = document.getElementById("metricsTitle");
 const apiNotice = document.getElementById("apiNotice");
+const apiRetry = document.getElementById("apiRetry");
+const loadingState = document.getElementById("loadingState");
+const metricsSkeleton = document.getElementById("metricsSkeleton");
 const simulatorInput = document.getElementById("simAmount");
 const simulatorResult = document.getElementById("simResult");
 const simulatorResultB = document.getElementById("simResultB");
@@ -192,6 +195,19 @@ function updateApiNotice(primary) {
   }
   const show = !primary || !primary.series || primary.series.length === 0;
   apiNotice.classList.toggle("is-hidden", !show);
+}
+
+function setLoading(isLoading) {
+  if (!loadingState) {
+    return;
+  }
+  loadingState.classList.toggle("is-hidden", !isLoading);
+  if (metricsSkeleton) {
+    metricsSkeleton.classList.toggle("is-hidden", !isLoading);
+  }
+  if (metrics) {
+    metrics.classList.toggle("is-hidden", isLoading);
+  }
 }
 
 function renderTable(country, secondary) {
@@ -560,10 +576,20 @@ function init() {
     });
   }
 
-  async function renderSelected() {
+  async function renderSelected(forceRefresh = false) {
     const selectedCode = countrySelect.value;
     if (!selectedCode) {
+      setLoading(false);
       return;
+    }
+
+    setLoading(true);
+
+    if (forceRefresh) {
+      inflationCache.delete(selectedCode);
+      if (countrySelectB && countrySelectB.value) {
+        inflationCache.delete(countrySelectB.value);
+      }
     }
 
     try {
@@ -586,20 +612,25 @@ function init() {
       }
       updateApiNotice(null);
       metrics.innerHTML = "<div class=\"card\"><small>Sin datos</small><h3>--</h3><small>Revisar API</small></div>";
+      setLoading(false);
       return;
     }
 
     if (!activeCountry || !activeCountry.series.length) {
+      updateApiNotice(activeCountry);
       metrics.innerHTML = "<div class=\"card\"><small>Sin datos</small><h3>--</h3><small>Serie vacia</small></div>";
+      setLoading(false);
       return;
     }
 
+    updateApiNotice(activeCountry);
     updateMetricsToggle(activeCountry, activeCountryB);
     renderChart(activeCountry, activeCountryB);
     renderTable(activeCountry, activeCountryB);
     setLegendNames(activeCountry, activeCountryB);
     updateCompareDiff(activeCountry, activeCountryB);
     updateSimulator(activeCountry, activeCountryB);
+    setLoading(false);
   }
 
   countrySelect.addEventListener("change", renderSelected);
@@ -637,6 +668,11 @@ function init() {
       }
       metricsView = "B";
       renderMetricsByView(activeCountry, activeCountryB);
+    });
+  }
+  if (apiRetry) {
+    apiRetry.addEventListener("click", () => {
+      renderSelected(true);
     });
   }
   renderSelected();

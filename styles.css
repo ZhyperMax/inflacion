@@ -146,6 +146,14 @@ input[type="number"]:focus {
   color: var(--muted);
 }
 
+.loading-pill {
+  background: #f2f5fb;
+  color: var(--muted);
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+}
+
 .notice {
   background: #fff5e8;
   color: #8c4a1f;
@@ -153,6 +161,15 @@ input[type="number"]:focus {
   padding: 10px 14px;
   border-radius: 12px;
   font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.btn-small {
+  padding: 6px 12px;
+  font-size: 0.75rem;
 }
 
 .segmented {
@@ -187,6 +204,23 @@ input[type="number"]:focus {
   box-shadow: var(--shadow);
   border: 1px solid rgba(234, 223, 211, 0.6);
   animation: fadeUp 600ms ease both;
+}
+
+.skeleton-card {
+  min-height: 120px;
+  position: relative;
+  overflow: hidden;
+  border-color: rgba(217, 225, 236, 0.6);
+  background: #f3f6fb;
+}
+
+.skeleton-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.7), transparent);
+  animation: shimmer 1.4s ease infinite;
 }
 
 .card small {
@@ -474,6 +508,15 @@ tbody tr:last-child td {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
   }
 }
 
