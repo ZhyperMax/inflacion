@@ -29,8 +29,12 @@
           </p>
         </div>
         <div class="hero-actions">
-          <label for="countrySelect">Pais</label>
-          <select id="countrySelect" aria-label="Seleccionar pais"></select>
+          <label for="countrySelect">Pais A</label>
+          <select id="countrySelect" aria-label="Seleccionar pais A"></select>
+          <label for="countrySelectB">Pais B</label>
+          <select id="countrySelectB" aria-label="Seleccionar pais B">
+            <option value="">Sin comparacion</option>
+          </select>
         </div>
       </section>
 
@@ -42,9 +46,18 @@
             <h2>Trayectoria 12 meses</h2>
             <p class="muted">Variacion mensual en porcentaje</p>
           </div>
-          <div class="legend">
-            <span class="dot"></span>
-            <span>Argentina</span>
+          <div class="chart-meta">
+            <div class="legend">
+              <span class="legend-item">
+                <span class="dot"></span>
+                <span id="legendA">Argentina</span>
+              </span>
+              <span class="legend-item" id="legendBItem">
+                <span class="dot secondary"></span>
+                <span id="legendB">Comparador</span>
+              </span>
+            </div>
+            <div class="pill compare-pill" id="compareDiff">Diferencia acumulada: --</div>
           </div>
         </div>
         <div class="chart-wrap">

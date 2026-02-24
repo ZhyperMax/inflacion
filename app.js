@@ -1,13 +1,23 @@
 const countrySelect = document.getElementById("countrySelect");
+const countrySelectB = document.getElementById("countrySelectB");
 const metrics = document.getElementById("metrics");
 const historyBody = document.getElementById("historyBody");
 const periodLabel = document.getElementById("periodLabel");
 const lastUpdated = document.getElementById("last-updated");
 const chart = document.getElementById("trendChart");
+const legendA = document.getElementById("legendA");
+const legendB = document.getElementById("legendB");
+const legendBItem = document.getElementById("legendBItem");
+const compareDiff = document.getElementById("compareDiff");
 const simulatorInput = document.getElementById("simAmount");
 const simulatorResult = document.getElementById("simResult");
 const simulatorReset = document.getElementById("simReset");
 const simulatorMonths = document.getElementById("simMonths");
+
+const chartColors = {
+  primary: "#2c6fbb",
+  secondary: "#1f9e89"
+};
 
 const monthLabels = [
   "Ene",
@@ -26,6 +36,11 @@ const monthLabels = [
 
 function formatPercent(value) {
   return `${value.toFixed(1).replace(".", ",")}%`;
+}
+
+function formatDelta(value) {
+  const sign = value > 0 ? "+" : value < 0 ? "" : "";
+  return `${sign}${value.toFixed(1).replace(".", ",")} pp`;
 }
 
 function formatMonthLabel(iso) {
@@ -123,7 +138,7 @@ function renderTable(country) {
   lastUpdated.textContent = `Actualizado: ${formatMonthLabel(last.month)}`;
 }
 
-function renderChart(country) {
+function renderChart(primary, secondary) {
   while (chart.firstChild) {
     chart.removeChild(chart.firstChild);
   }
@@ -131,30 +146,49 @@ function renderChart(country) {
   const width = 600;
   const height = 220;
   const padding = 24;
-  const series = country.series;
-  const trend = getTrendInfo(series);
-  const values = series.map((item) => item.value);
+  const primarySeries = primary.series;
+  const trend = getTrendInfo(primarySeries);
+  const compareEnabled = Boolean(secondary);
+  const length = compareEnabled
+    ? Math.min(primarySeries.length, secondary.series.length)
+    : primarySeries.length;
+  const seriesA = primarySeries.slice(-length);
+  const seriesB = compareEnabled ? secondary.series.slice(-length) : null;
+  const values = seriesB
+    ? [...seriesA.map((item) => item.value), ...seriesB.map((item) => item.value)]
+    : seriesA.map((item) => item.value);
   const max = Math.max(...values) * 1.1;
   const min = Math.max(0, Math.min(...values) * 0.8);
+  const divisor = Math.max(1, length - 1);
 
   const scaleX = (index) =>
-    padding + (index / (series.length - 1)) * (width - padding * 2);
+    padding + (index / divisor) * (width - padding * 2);
   const scaleY = (value) =>
     height - padding - ((value - min) / (max - min || 1)) * (height - padding * 2);
 
-  const points = series.map((item, idx) => [scaleX(idx), scaleY(item.value)]);
+  const pointsA = seriesA.map((item, idx) => [scaleX(idx), scaleY(item.value)]);
+  const pointsB = seriesB
+    ? seriesB.map((item, idx) => [scaleX(idx), scaleY(item.value)])
+    : null;
 
   const areaPath = [
-    `M ${points[0][0]} ${height - padding}`,
-    ...points.map((point) => `L ${point[0]} ${point[1]}`),
-    `L ${points[points.length - 1][0]} ${height - padding}`,
+    `M ${pointsA[0][0]} ${height - padding}`,
+    ...pointsA.map((point) => `L ${point[0]} ${point[1]}`),
+    `L ${pointsA[pointsA.length - 1][0]} ${height - padding}`,
     "Z"
   ].join(" ");
 
   const linePath = [
-    `M ${points[0][0]} ${points[0][1]}`,
-    ...points.slice(1).map((point) => `L ${point[0]} ${point[1]}`)
+    `M ${pointsA[0][0]} ${pointsA[0][1]}`,
+    ...pointsA.slice(1).map((point) => `L ${point[0]} ${point[1]}`)
   ].join(" ");
+
+  const linePathB = pointsB
+    ? [
+        `M ${pointsB[0][0]} ${pointsB[0][1]}`,
+        ...pointsB.slice(1).map((point) => `L ${point[0]} ${point[1]}`)
+      ].join(" ")
+    : null;
 
   const area = document.createElementNS("http://www.w3.org/2000/svg", "path");
   area.setAttribute("d", areaPath);
@@ -163,18 +197,42 @@ function renderChart(country) {
   const line = document.createElementNS("http://www.w3.org/2000/svg", "path");
   line.setAttribute("d", linePath);
   line.setAttribute("fill", "none");
-  line.setAttribute("stroke", "#2c6fbb");
+  line.setAttribute("stroke", chartColors.primary);
   line.setAttribute("stroke-width", "3");
   line.setAttribute("stroke-linecap", "round");
   line.setAttribute("stroke-linejoin", "round");
   line.classList.add("chart-line");
 
-  const lastPoint = points[points.length - 1];
+  const lineB = linePathB
+    ? document.createElementNS("http://www.w3.org/2000/svg", "path")
+    : null;
+  if (lineB) {
+    lineB.setAttribute("d", linePathB);
+    lineB.setAttribute("fill", "none");
+    lineB.setAttribute("stroke", chartColors.secondary);
+    lineB.setAttribute("stroke-width", "2.5");
+    lineB.setAttribute("stroke-linecap", "round");
+    lineB.setAttribute("stroke-linejoin", "round");
+    lineB.classList.add("chart-line");
+  }
+
+  const lastPoint = pointsA[pointsA.length - 1];
   const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
   dot.setAttribute("cx", lastPoint[0]);
   dot.setAttribute("cy", lastPoint[1]);
   dot.setAttribute("r", "5");
-  dot.setAttribute("fill", "#2c6fbb");
+  dot.setAttribute("fill", chartColors.primary);
+
+  const dotB = pointsB
+    ? document.createElementNS("http://www.w3.org/2000/svg", "circle")
+    : null;
+  if (dotB) {
+    const lastPointB = pointsB[pointsB.length - 1];
+    dotB.setAttribute("cx", lastPointB[0]);
+    dotB.setAttribute("cy", lastPointB[1]);
+    dotB.setAttribute("r", "4");
+    dotB.setAttribute("fill", chartColors.secondary);
+  }
 
   const grid = document.createElementNS("http://www.w3.org/2000/svg", "line");
   grid.setAttribute("x1", padding);
@@ -187,7 +245,13 @@ function renderChart(country) {
   chart.appendChild(grid);
   chart.appendChild(area);
   chart.appendChild(line);
+  if (lineB) {
+    chart.appendChild(lineB);
+  }
   chart.appendChild(dot);
+  if (dotB) {
+    chart.appendChild(dotB);
+  }
 
   if (trend.hasData) {
     const labelGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
@@ -237,11 +301,21 @@ function renderChart(country) {
     labelBg.setAttribute("height", bbox.height + pad * 2);
   }
 
-  const length = line.getTotalLength();
-  line.style.strokeDasharray = `${length}`;
-  line.style.strokeDashoffset = `${length}`;
+  const lengthA = line.getTotalLength();
+  line.style.strokeDasharray = `${lengthA}`;
+  line.style.strokeDashoffset = `${lengthA}`;
+
+  if (lineB) {
+    const lengthB = lineB.getTotalLength();
+    lineB.style.strokeDasharray = `${lengthB}`;
+    lineB.style.strokeDashoffset = `${lengthB}`;
+  }
+
   requestAnimationFrame(() => {
     line.style.strokeDashoffset = "0";
+    if (lineB) {
+      lineB.style.strokeDashoffset = "0";
+    }
   });
 }
 
@@ -264,16 +338,42 @@ function updateSimulator(country) {
   simulatorResult.textContent = `Si ganabas ${baseLabel} hace ${months} meses, hoy necesitarias ${adjustedLabel}`;
 }
 
-function setLegendName(name) {
-  const legend = document.querySelector(".legend span:last-child");
-  if (legend) {
-    legend.textContent = name;
+function setLegendNames(primary, secondary) {
+  if (legendA) {
+    legendA.textContent = primary ? primary.name : "-";
   }
+  if (legendB) {
+    legendB.textContent = secondary ? secondary.name : "Comparador";
+  }
+  if (legendBItem) {
+    legendBItem.classList.toggle("is-hidden", !secondary);
+  }
+}
+
+function updateCompareDiff(primary, secondary) {
+  if (!compareDiff) {
+    return;
+  }
+  if (!primary || !secondary) {
+    compareDiff.textContent = "Diferencia acumulada: --";
+    compareDiff.classList.add("is-hidden");
+    return;
+  }
+
+  const length = Math.min(primary.series.length, secondary.series.length);
+  const seriesA = primary.series.slice(-length);
+  const seriesB = secondary.series.slice(-length);
+  const cumulativeA = cumulativeInflation(seriesA);
+  const cumulativeB = cumulativeInflation(seriesB);
+  const diff = cumulativeA - cumulativeB;
+  compareDiff.textContent = `Diferencia acumulada: ${formatDelta(diff)} (${primary.name} - ${secondary.name})`;
+  compareDiff.classList.remove("is-hidden");
 }
 
 function init(data) {
   countrySelect.innerHTML = "";
   let activeCountry = null;
+  let activeCountryB = null;
   data.countries.forEach((country, index) => {
     const option = document.createElement("option");
     option.value = country.code;
@@ -284,20 +384,50 @@ function init(data) {
     countrySelect.appendChild(option);
   });
 
+  if (countrySelectB) {
+    countrySelectB.innerHTML = "";
+    const emptyOption = document.createElement("option");
+    emptyOption.value = "";
+    emptyOption.textContent = "Sin comparacion";
+    emptyOption.selected = true;
+    countrySelectB.appendChild(emptyOption);
+    data.countries.forEach((country, index) => {
+      const option = document.createElement("option");
+      option.value = country.code;
+      option.textContent = country.name;
+      countrySelectB.appendChild(option);
+    });
+  }
+
   function renderSelected() {
     const selected = data.countries.find((item) => item.code === countrySelect.value);
     if (!selected) {
       return;
     }
     activeCountry = selected;
+    if (countrySelectB) {
+      activeCountryB = countrySelectB.disabled
+        ? null
+        : data.countries.find((item) => item.code === countrySelectB.value) || null;
+    }
     renderMetrics(selected);
-    renderChart(selected);
+    renderChart(selected, activeCountryB);
     renderTable(selected);
-    setLegendName(selected.name);
+    setLegendNames(selected, activeCountryB);
+    updateCompareDiff(selected, activeCountryB);
     updateSimulator(selected);
   }
 
   countrySelect.addEventListener("change", renderSelected);
+  if (countrySelectB) {
+    const hasMultiple = data.countries.length > 1;
+    countrySelectB.disabled = !hasMultiple;
+    countrySelectB.addEventListener("change", renderSelected);
+    if (!hasMultiple) {
+      activeCountryB = null;
+      setLegendNames(activeCountry, null);
+    }
+  }
   if (simulatorInput) {
     simulatorInput.addEventListener("input", () => updateSimulator(activeCountry));
   }

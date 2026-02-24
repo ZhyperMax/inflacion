@@ -6,6 +6,8 @@
   --muted: #5b6777;
   --accent: #2c6fbb;
   --accent-soft: #e3edf9;
+  --accent-2: #1f9e89;
+  --accent-2-soft: #dcf2ee;
   --card: #ffffff;
   --line: #d9e1ec;
   --shadow: 0 20px 50px rgba(22, 36, 56, 0.08);
@@ -225,6 +227,13 @@ input[type="number"]:focus {
   margin-bottom: 18px;
 }
 
+.chart-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+}
+
 .panel h2 {
   margin: 0 0 6px;
   font-family: "Space Grotesk", sans-serif;
@@ -238,9 +247,16 @@ input[type="number"]:focus {
 .legend {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   font-size: 0.85rem;
   color: var(--muted);
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .legend .dot {
@@ -248,6 +264,10 @@ input[type="number"]:focus {
   height: 10px;
   border-radius: 999px;
   background: var(--accent);
+}
+
+.legend .dot.secondary {
+  background: var(--accent-2);
 }
 
 .chart-wrap {
@@ -328,6 +348,15 @@ svg {
   font-size: 0.85rem;
 }
 
+.compare-pill {
+  background: var(--accent-2-soft);
+  color: var(--accent-2);
+}
+
+.is-hidden {
+  display: none;
+}
+
 .table-wrap {
   overflow-x: auto;
 }
@@ -386,6 +415,10 @@ tbody tr:last-child td {
 
   .panel-header {
     flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .chart-meta {
     align-items: flex-start;
   }
 }
