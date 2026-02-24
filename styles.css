@@ -389,7 +389,42 @@ svg {
 }
 
 .chart-line {
-  transition: stroke-dashoffset 1100ms ease;
+  transition: stroke-dashoffset 1400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.chart-line:nth-of-type(3) {
+  transition-delay: 200ms;
+}
+
+svg path[fill*="rgba"] {
+  animation: fadeInArea 1000ms ease-out both;
+}
+
+svg circle {
+  animation: popDot 600ms cubic-bezier(0.34, 1.56, 0.64, 1) 1200ms both;
+}
+
+@keyframes fadeInArea {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes popDot {
+  0% {
+    r: 0;
+    opacity: 0;
+  }
+  50% {
+    r: 7;
+  }
+  100% {
+    r: 5;
+    opacity: 1;
+  }
 }
 
 .chart-label {

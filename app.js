@@ -508,10 +508,12 @@ function renderChart(primary, secondary) {
   }
 
   requestAnimationFrame(() => {
-    line.style.strokeDashoffset = "0";
-    if (lineB) {
-      lineB.style.strokeDashoffset = "0";
-    }
+    setTimeout(() => {
+      line.style.strokeDashoffset = "0";
+      if (lineB) {
+        lineB.style.strokeDashoffset = "0";
+      }
+    }, 50);
   });
 }
 
