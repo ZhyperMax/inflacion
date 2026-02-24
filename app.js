@@ -112,6 +112,12 @@ function formatCurrency(value, currency) {
   }).format(value);
 }
 
+function toPercent(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return null;
+  return (n > 0 && n < 1) ? n * 100 : n;
+}
+
 function getTrendInfo(series) {
   if (series.length < 2) {
     return { hasData: false, delta: 0, className: "trend-flat", label: "→ 0,0 pp" };
@@ -563,10 +569,14 @@ async function fetchMonthlyInflationAR() {
     return [];
   }
   
-  return payload.data.map(row => ({
-    period: row[0],
-    value: row[1] !== null ? Number(row[1]) : 0
-  }));
+  console.log("RAW ARG value ejemplo:", payload.data[payload.data.length - 1]);
+  
+  return payload.data
+    .map(([date, value]) => ({
+      period: date,
+      value: toPercent(value)
+    }))
+    .filter(item => item.value !== null);
 }
 
 async function fetchInflationSeries(code) {
