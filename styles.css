@@ -133,6 +133,44 @@ input[type="number"]:focus {
   gap: 18px;
 }
 
+.metrics-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.metrics-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.segmented {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--card);
+  padding: 4px;
+  gap: 4px;
+}
+
+.segmented-btn {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition);
+}
+
+.segmented-btn.is-active {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
 .card {
   background: var(--card);
   border-radius: var(--radius);

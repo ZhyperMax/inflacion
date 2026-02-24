@@ -13,6 +13,10 @@ const legendA = document.getElementById("legendA");
 const legendB = document.getElementById("legendB");
 const legendBItem = document.getElementById("legendBItem");
 const compareDiff = document.getElementById("compareDiff");
+const metricsToggle = document.getElementById("metricsToggle");
+const metricsBtnA = document.getElementById("metricsBtnA");
+const metricsBtnB = document.getElementById("metricsBtnB");
+const metricsTitle = document.getElementById("metricsTitle");
 const simulatorInput = document.getElementById("simAmount");
 const simulatorResult = document.getElementById("simResult");
 const simulatorResultB = document.getElementById("simResultB");
@@ -36,6 +40,7 @@ const COUNTRY_CATALOG = [
 ];
 
 const inflationCache = new Map();
+let metricsView = "A";
 
 const monthLabels = [
   "Ene",
@@ -142,6 +147,42 @@ function renderMetrics(country) {
     `;
     metrics.appendChild(card);
   });
+}
+
+function renderMetricsByView(primary, secondary) {
+  const target = metricsView === "B" && secondary ? secondary : primary;
+  if (!target) {
+    return;
+  }
+  metricsView = target === primary ? "A" : "B";
+  renderMetrics(target);
+  if (metricsTitle) {
+    metricsTitle.textContent = `Resumen: ${target.name}`;
+  }
+  if (metricsBtnA) {
+    metricsBtnA.classList.toggle("is-active", metricsView === "A");
+  }
+  if (metricsBtnB) {
+    metricsBtnB.classList.toggle("is-active", metricsView === "B");
+  }
+}
+
+function updateMetricsToggle(primary, secondary) {
+  if (!metricsToggle || !metricsBtnA || !metricsBtnB) {
+    renderMetricsByView(primary, secondary);
+    return;
+  }
+
+  if (secondary) {
+    metricsToggle.classList.remove("is-hidden");
+    metricsBtnA.textContent = primary.name;
+    metricsBtnB.textContent = secondary.name;
+  } else {
+    metricsToggle.classList.add("is-hidden");
+    metricsView = "A";
+  }
+
+  renderMetricsByView(primary, secondary);
 }
 
 function renderTable(country, secondary) {
@@ -531,7 +572,7 @@ function init() {
       return;
     }
 
-    renderMetrics(activeCountry);
+    updateMetricsToggle(activeCountry, activeCountryB);
     renderChart(activeCountry, activeCountryB);
     renderTable(activeCountry, activeCountryB);
     setLegendNames(activeCountry, activeCountryB);
@@ -559,6 +600,21 @@ function init() {
     simulatorReset.addEventListener("click", () => {
       simulatorInput.value = "100000";
       updateSimulator(activeCountry, activeCountryB);
+    });
+  }
+  if (metricsBtnA) {
+    metricsBtnA.addEventListener("click", () => {
+      metricsView = "A";
+      renderMetricsByView(activeCountry, activeCountryB);
+    });
+  }
+  if (metricsBtnB) {
+    metricsBtnB.addEventListener("click", () => {
+      if (!activeCountryB) {
+        return;
+      }
+      metricsView = "B";
+      renderMetricsByView(activeCountry, activeCountryB);
     });
   }
   renderSelected();
