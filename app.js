@@ -66,16 +66,16 @@ function formatDelta(value) {
   return `${sign}${value.toFixed(1).replace(".", ",")} pp`;
 }
 
-function formatPeriodLabel(value) {
-  if (/^\d{4}-\d{2}$/.test(value)) {
-    const [year, month] = value.split("-");
+function formatPeriodLabel(period) {
+  if (/^\d{4}-\d{2}$/.test(period)) {
+    const [year, month] = period.split("-");
     const idx = Math.max(0, Math.min(11, Number(month) - 1));
     return `${monthLabels[idx]} ${year}`;
   }
-  if (/^\d{4}$/.test(value)) {
-    return value;
+  if (/^\d{4}$/.test(period)) {
+    return period;
   }
-  return value;
+  return period;
 }
 
 function cumulativeInflation(series) {
@@ -124,7 +124,7 @@ function renderMetrics(country) {
     {
       label: "Ultimo anio",
       value: formatPercent(latest.value),
-      note: formatPeriodLabel(latest.month),
+      note: formatPeriodLabel(latest.period),
       trend: trend.hasData ? { label: trend.label, className: trend.className } : null
     },
     { label: "Inflacion 12 anios", value: formatPercent(cumulative), note: "Acumulado" },
@@ -197,7 +197,7 @@ function renderTable(country, secondary) {
   series.forEach((item) => {
     const row = document.createElement("tr");
     row.innerHTML = `
-      <td>${formatPeriodLabel(item.month)}</td>
+      <td>${formatPeriodLabel(item.period)}</td>
       <td>${formatPercent(item.value)}</td>
     `;
     historyBody.appendChild(row);
@@ -212,7 +212,7 @@ function renderTable(country, secondary) {
     seriesB.forEach((item) => {
       const row = document.createElement("tr");
       row.innerHTML = `
-        <td>${formatPeriodLabel(item.month)}</td>
+        <td>${formatPeriodLabel(item.period)}</td>
         <td>${formatPercent(item.value)}</td>
       `;
       historyBodyB.appendChild(row);
@@ -228,8 +228,8 @@ function renderTable(country, secondary) {
 
   const first = country.series[0];
   const last = country.series[country.series.length - 1];
-  periodLabel.textContent = `Periodo: ${formatPeriodLabel(first.month)} - ${formatPeriodLabel(last.month)}`;
-  lastUpdated.textContent = `Actualizado: ${formatPeriodLabel(last.month)}`;
+  periodLabel.textContent = `Periodo: ${formatPeriodLabel(first.period)} - ${formatPeriodLabel(last.period)}`;
+  lastUpdated.textContent = `Actualizado: ${formatPeriodLabel(last.period)}`;
 }
 
 function renderChart(primary, secondary) {
@@ -466,10 +466,12 @@ async function fetchInflationSeries(code) {
     return [];
   }
 
-  const filtered = rows.filter((row) => row.value !== null);
-  const trimmed = filtered.slice(0, 12).reverse();
+  const filtered = rows
+    .filter((row) => row.value !== null)
+    .sort((a, b) => Number(a.date) - Number(b.date));
+  const trimmed = filtered.slice(-12);
   return trimmed.map((row) => ({
-    month: String(row.date),
+    period: String(row.date),
     value: Number(row.value)
   }));
 }
@@ -563,6 +565,16 @@ function init() {
         activeCountryB = null;
       }
     } catch (error) {
+      const fallback = COUNTRY_CATALOG.find((item) => item.code === selectedCode);
+      if (fallback) {
+        inflationCache.set(selectedCode, { ...fallback, series: [] });
+      }
+      if (countrySelectB && countrySelectB.value) {
+        const fallbackB = COUNTRY_CATALOG.find((item) => item.code === countrySelectB.value);
+        if (fallbackB) {
+          inflationCache.set(countrySelectB.value, { ...fallbackB, series: [] });
+        }
+      }
       metrics.innerHTML = "<div class=\"card\"><small>Sin datos</small><h3>--</h3><small>Revisar API</small></div>";
       return;
     }
