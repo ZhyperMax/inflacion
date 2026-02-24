@@ -26,7 +26,13 @@ const chartColors = {
 
 const COUNTRY_CATALOG = [
   { code: "AR", name: "Argentina", currency: "ARS" },
-  { code: "CL", name: "Chile", currency: "CLP" }
+  { code: "CL", name: "Chile", currency: "CLP" },
+  { code: "BR", name: "Brasil", currency: "BRL" },
+  { code: "MX", name: "Mexico", currency: "MXN" },
+  { code: "CO", name: "Colombia", currency: "COP" },
+  { code: "PE", name: "Peru", currency: "PEN" },
+  { code: "UY", name: "Uruguay", currency: "UYU" },
+  { code: "PY", name: "Paraguay", currency: "PYG" }
 ];
 
 const inflationCache = new Map();
