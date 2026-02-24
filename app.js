@@ -553,7 +553,7 @@ function updateSimulator(country, secondary) {
 
 async function fetchMonthlyInflationAR() {
   const seriesId = "103.1_I2N_2016_M_15";
-  const url = `https://apis.datos.gob.ar/series/api/series?ids=${seriesId}:percent_change&last=12`;
+  const url = `https://apis.datos.gob.ar/series/api/series?ids=${seriesId}:percent_change_a_year_ago&last=12`;
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error("No se pudo cargar la serie mensual");
@@ -592,6 +592,19 @@ async function fetchInflationSeries(code) {
   }));
 }
 
+function updateOptionStatus(code, status) {
+  const selectors = [countrySelect, countrySelectB].filter(Boolean);
+  selectors.forEach((select) => {
+    const option = Array.from(select.options).find((item) => item.value === code);
+    if (!option) {
+      return;
+    }
+    const baseLabel = option.dataset.label || option.textContent.replace(" (pendiente)", "");
+    option.dataset.label = baseLabel;
+    option.textContent = status === "pending" ? `${baseLabel} (pendiente)` : baseLabel;
+  });
+}
+
 async function loadCountryData(code) {
   const cacheKey = `${code}-${periodMode}`;
   if (inflationCache.has(cacheKey)) {
@@ -612,9 +625,10 @@ async function loadCountryData(code) {
   const result = { ...meta, series, mode: periodMode };
   inflationCache.set(cacheKey, result);
   
+  // Limpiar estado pendiente si existe
   if (prefetchStatus.has(code)) {
     prefetchStatus.set(code, "ready");
-    updateOptionStatus(code);
+    updateOptionStatus(code, "ready");
   }
   
   return result;
@@ -644,21 +658,11 @@ function prefetchAllCountries() {
 
   updateProgress();
 
-  const updateOptionStatus = (code, status) => {
-    const selectors = [countrySelect, countrySelectB].filter(Boolean);
-    selectors.forEach((select) => {
-      const option = Array.from(select.options).find((item) => item.value === code);
-      if (!option) {
-        return;
-      }
-      const baseLabel = option.dataset.label || option.textContent || "";
-      option.dataset.label = baseLabel.replace(" (pendiente)", "");
-      option.textContent =
-        status === "pending" ? `${option.dataset.label} (pendiente)` : option.dataset.label;
-    });
-  };
-
   (async () => {
+    // Guardar el modo actual y forzar a anual para el prefetch
+    const originalMode = periodMode;
+    periodMode = "anual";
+    
     for (const country of COUNTRY_CATALOG) {
       const data = await withTimeout(loadCountryData(country.code), 2000).catch(() => null);
       const ok = data && Array.isArray(data.series) && data.series.length > 0;
@@ -667,6 +671,10 @@ function prefetchAllCountries() {
       completed += 1;
       updateProgress();
     }
+    
+    // Restaurar el modo original
+    periodMode = originalMode;
+    
     if (prefetchState) {
       prefetchState.classList.add("is-hidden");
     }
@@ -763,11 +771,13 @@ function init() {
       activeCountry = await loadCountryData(selectedCode);
       if (activeCountry && Array.isArray(activeCountry.series) && activeCountry.series.length > 0) {
         prefetchStatus.set(selectedCode, "ready");
+        updateOptionStatus(selectedCode, "ready");
       }
       if (countrySelectB && !countrySelectB.disabled && countrySelectB.value) {
         activeCountryB = await loadCountryData(countrySelectB.value);
         if (activeCountryB && Array.isArray(activeCountryB.series) && activeCountryB.series.length > 0) {
           prefetchStatus.set(countrySelectB.value, "ready");
+          updateOptionStatus(countrySelectB.value, "ready");
         }
       } else {
         activeCountryB = null;
