@@ -7,6 +7,7 @@ const chart = document.getElementById("trendChart");
 const simulatorInput = document.getElementById("simAmount");
 const simulatorResult = document.getElementById("simResult");
 const simulatorReset = document.getElementById("simReset");
+const simulatorMonths = document.getElementById("simMonths");
 
 const monthLabels = [
   "Ene",
@@ -251,13 +252,16 @@ function updateSimulator(country) {
 
   const rawValue = Number(simulatorInput.value);
   const base = Number.isFinite(rawValue) && rawValue > 0 ? rawValue : 0;
-  const cumulative = cumulativeInflation(country.series);
+  const requestedMonths = simulatorMonths ? Number(simulatorMonths.value) : 12;
+  const months = Math.max(1, Math.min(country.series.length, requestedMonths || 12));
+  const seriesSlice = country.series.slice(-months);
+  const cumulative = cumulativeInflation(seriesSlice);
   const adjusted = base * (1 + cumulative / 100);
   const currency = country.currency || "ARS";
   const baseLabel = formatCurrency(base, currency);
   const adjustedLabel = base > 0 ? formatCurrency(adjusted, currency) : "--";
 
-  simulatorResult.textContent = `Si ganabas ${baseLabel} hace 12 meses, hoy necesitarias ${adjustedLabel}`;
+  simulatorResult.textContent = `Si ganabas ${baseLabel} hace ${months} meses, hoy necesitarias ${adjustedLabel}`;
 }
 
 function setLegendName(name) {
@@ -296,6 +300,9 @@ function init(data) {
   countrySelect.addEventListener("change", renderSelected);
   if (simulatorInput) {
     simulatorInput.addEventListener("input", () => updateSimulator(activeCountry));
+  }
+  if (simulatorMonths) {
+    simulatorMonths.addEventListener("change", () => updateSimulator(activeCountry));
   }
   if (simulatorReset && simulatorInput) {
     simulatorReset.addEventListener("click", () => {

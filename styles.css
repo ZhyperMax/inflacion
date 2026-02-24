@@ -173,9 +173,13 @@ input[type="number"]:focus {
 
 .sim-input-row {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: 1fr auto auto;
   gap: 10px;
   align-items: center;
+}
+
+.sim-input-row select {
+  min-width: 110px;
 }
 
 .sim-input label {
