@@ -24,7 +24,7 @@
         <div>
           <h1>Seguimiento de inflacion por pais</h1>
           <p>
-            Lectura clara y minimalista para comparar la dinamica mensual.
+            Lectura clara y minimalista para comparar la dinamica anual.
             Empezamos con Argentina.
           </p>
         </div>
@@ -43,8 +43,8 @@
       <section class="panel">
         <div class="panel-header">
           <div>
-            <h2>Trayectoria 12 meses</h2>
-            <p class="muted">Variacion mensual en porcentaje</p>
+            <h2>Trayectoria 12 anios</h2>
+            <p class="muted">Variacion anual en porcentaje</p>
           </div>
           <div class="chart-meta">
             <div class="legend">
@@ -74,7 +74,7 @@
         </div>
         <div class="simulator-grid">
           <div class="sim-input">
-            <label for="simAmount">Monto hace 12 meses</label>
+            <label for="simAmount">Monto hace 12 anios</label>
             <div class="sim-input-row">
               <input
                 id="simAmount"
@@ -86,16 +86,21 @@
                 aria-describedby="simHelp"
               />
               <select id="simMonths" aria-label="Seleccionar periodo">
-                <option value="3">3 meses</option>
-                <option value="6">6 meses</option>
-                <option value="12" selected>12 meses</option>
+                <option value="3">3 anios</option>
+                <option value="6">6 anios</option>
+                <option value="12" selected>12 anios</option>
               </select>
               <button class="btn-ghost" type="button" id="simReset">Reset</button>
             </div>
             <small id="simHelp" class="muted">Usa el valor de referencia que quieras.</small>
           </div>
-          <div class="sim-result" id="simResult">
-            Si ganabas $100.000 hace 12 meses, hoy necesitarias --
+          <div class="sim-results">
+            <div class="sim-result" id="simResult">
+              Si ganabas $100.000 hace 12 anios, hoy necesitarias --
+            </div>
+            <div class="sim-result secondary is-hidden" id="simResultB">
+              Si ganabas $100.000 hace 12 anios, hoy necesitarias --
+            </div>
           </div>
         </div>
       </section>
@@ -103,21 +108,40 @@
       <section class="panel">
         <div class="panel-header">
           <div>
-            <h2>Historial mensual</h2>
-            <p class="muted">Ultimos 12 registros disponibles</p>
+            <h2>Historial anual</h2>
+            <p class="muted">Ultimos 12 anios disponibles</p>
           </div>
           <div class="pill" id="periodLabel">Periodo: --</div>
         </div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Mes</th>
-                <th>Inflacion (%)</th>
-              </tr>
-            </thead>
-            <tbody id="historyBody"></tbody>
-          </table>
+        <div class="history-grid">
+          <div class="history-card">
+            <div class="history-title" id="historyTitleA">Pais A</div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Anio</th>
+                    <th>Inflacion (%)</th>
+                  </tr>
+                </thead>
+                <tbody id="historyBody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="history-card" id="historyCardB">
+            <div class="history-title" id="historyTitleB">Pais B</div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Anio</th>
+                    <th>Inflacion (%)</th>
+                  </tr>
+                </thead>
+                <tbody id="historyBodyB"></tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </section>
     </main>

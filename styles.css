@@ -198,6 +198,15 @@ input[type="number"]:focus {
   border-radius: 16px;
 }
 
+.sim-results {
+  display: grid;
+  gap: 12px;
+}
+
+.sim-result.secondary {
+  background: var(--accent-2-soft);
+}
+
 .btn-ghost {
   border: 1px solid var(--line);
   background: transparent;
@@ -351,6 +360,26 @@ svg {
 .compare-pill {
   background: var(--accent-2-soft);
   color: var(--accent-2);
+}
+
+.history-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 18px;
+}
+
+.history-card {
+  background: #f9fbfe;
+  border-radius: 14px;
+  padding: 12px 14px 6px;
+  border: 1px solid rgba(217, 225, 236, 0.6);
+}
+
+.history-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 8px;
 }
 
 .is-hidden {

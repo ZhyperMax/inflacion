@@ -2,6 +2,10 @@ const countrySelect = document.getElementById("countrySelect");
 const countrySelectB = document.getElementById("countrySelectB");
 const metrics = document.getElementById("metrics");
 const historyBody = document.getElementById("historyBody");
+const historyBodyB = document.getElementById("historyBodyB");
+const historyTitleA = document.getElementById("historyTitleA");
+const historyTitleB = document.getElementById("historyTitleB");
+const historyCardB = document.getElementById("historyCardB");
 const periodLabel = document.getElementById("periodLabel");
 const lastUpdated = document.getElementById("last-updated");
 const chart = document.getElementById("trendChart");
@@ -11,6 +15,7 @@ const legendBItem = document.getElementById("legendBItem");
 const compareDiff = document.getElementById("compareDiff");
 const simulatorInput = document.getElementById("simAmount");
 const simulatorResult = document.getElementById("simResult");
+const simulatorResultB = document.getElementById("simResultB");
 const simulatorReset = document.getElementById("simReset");
 const simulatorMonths = document.getElementById("simMonths");
 
@@ -18,6 +23,13 @@ const chartColors = {
   primary: "#2c6fbb",
   secondary: "#1f9e89"
 };
+
+const COUNTRY_CATALOG = [
+  { code: "AR", name: "Argentina", currency: "ARS" },
+  { code: "CL", name: "Chile", currency: "CLP" }
+];
+
+const inflationCache = new Map();
 
 const monthLabels = [
   "Ene",
@@ -43,10 +55,16 @@ function formatDelta(value) {
   return `${sign}${value.toFixed(1).replace(".", ",")} pp`;
 }
 
-function formatMonthLabel(iso) {
-  const [year, month] = iso.split("-");
-  const idx = Math.max(0, Math.min(11, Number(month) - 1));
-  return `${monthLabels[idx]} ${year}`;
+function formatPeriodLabel(value) {
+  if (/^\d{4}-\d{2}$/.test(value)) {
+    const [year, month] = value.split("-");
+    const idx = Math.max(0, Math.min(11, Number(month) - 1));
+    return `${monthLabels[idx]} ${year}`;
+  }
+  if (/^\d{4}$/.test(value)) {
+    return value;
+  }
+  return value;
 }
 
 function cumulativeInflation(series) {
@@ -93,13 +111,13 @@ function renderMetrics(country) {
 
   const items = [
     {
-      label: "Ultimo mes",
+      label: "Ultimo anio",
       value: formatPercent(latest.value),
-      note: formatMonthLabel(latest.month),
+      note: formatPeriodLabel(latest.month),
       trend: trend.hasData ? { label: trend.label, className: trend.className } : null
     },
-    { label: "Inflacion 12 meses", value: formatPercent(cumulative), note: "Acumulado" },
-    { label: "Promedio 12m", value: formatPercent(average), note: "Media simple" }
+    { label: "Inflacion 12 anios", value: formatPercent(cumulative), note: "Acumulado" },
+    { label: "Promedio 12a", value: formatPercent(average), note: "Media simple" }
   ];
 
   items.forEach((item, index) => {
@@ -120,22 +138,51 @@ function renderMetrics(country) {
   });
 }
 
-function renderTable(country) {
-  historyBody.innerHTML = "";
+function renderTable(country, secondary) {
+  if (historyBody) {
+    historyBody.innerHTML = "";
+  }
+  if (historyBodyB) {
+    historyBodyB.innerHTML = "";
+  }
+
   const series = [...country.series].reverse();
   series.forEach((item) => {
     const row = document.createElement("tr");
     row.innerHTML = `
-      <td>${formatMonthLabel(item.month)}</td>
+      <td>${formatPeriodLabel(item.month)}</td>
       <td>${formatPercent(item.value)}</td>
     `;
     historyBody.appendChild(row);
   });
 
+  if (historyTitleA) {
+    historyTitleA.textContent = country.name;
+  }
+
+  if (secondary && historyBodyB) {
+    const seriesB = [...secondary.series].reverse();
+    seriesB.forEach((item) => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${formatPeriodLabel(item.month)}</td>
+        <td>${formatPercent(item.value)}</td>
+      `;
+      historyBodyB.appendChild(row);
+    });
+  }
+
+  if (historyTitleB) {
+    historyTitleB.textContent = secondary ? secondary.name : "Pais B";
+  }
+  if (historyCardB) {
+    historyCardB.classList.toggle("is-hidden", !secondary);
+  }
+
   const first = country.series[0];
   const last = country.series[country.series.length - 1];
-  periodLabel.textContent = `Periodo: ${formatMonthLabel(first.month)} - ${formatMonthLabel(last.month)}`;
-  lastUpdated.textContent = `Actualizado: ${formatMonthLabel(last.month)}`;
+  periodLabel.textContent = `Periodo: ${formatPeriodLabel(first.month)} - ${formatPeriodLabel(last.month)}`;
+  lastUpdated.textContent = `Actualizado: ${formatPeriodLabel(last.month)}`;
 }
 
 function renderChart(primary, secondary) {
@@ -152,6 +199,9 @@ function renderChart(primary, secondary) {
   const length = compareEnabled
     ? Math.min(primarySeries.length, secondary.series.length)
     : primarySeries.length;
+  if (length === 0) {
+    return;
+  }
   const seriesA = primarySeries.slice(-length);
   const seriesB = compareEnabled ? secondary.series.slice(-length) : null;
   const values = seriesB
@@ -319,7 +369,7 @@ function renderChart(primary, secondary) {
   });
 }
 
-function updateSimulator(country) {
+function updateSimulator(country, secondary) {
   if (!country || !simulatorInput || !simulatorResult) {
     return;
   }
@@ -335,7 +385,60 @@ function updateSimulator(country) {
   const baseLabel = formatCurrency(base, currency);
   const adjustedLabel = base > 0 ? formatCurrency(adjusted, currency) : "--";
 
-  simulatorResult.textContent = `Si ganabas ${baseLabel} hace ${months} meses, hoy necesitarias ${adjustedLabel}`;
+  simulatorResult.textContent = `Si ganabas ${baseLabel} hace ${months} anios, hoy necesitarias ${adjustedLabel}`;
+
+  if (simulatorResultB) {
+    if (!secondary) {
+      simulatorResultB.classList.add("is-hidden");
+      return;
+    }
+
+    const monthsB = Math.max(1, Math.min(secondary.series.length, requestedMonths || 12));
+    const seriesSliceB = secondary.series.slice(-monthsB);
+    const cumulativeB = cumulativeInflation(seriesSliceB);
+    const adjustedB = base * (1 + cumulativeB / 100);
+    const currencyB = secondary.currency || "ARS";
+    const baseLabelB = formatCurrency(base, currencyB);
+    const adjustedLabelB = base > 0 ? formatCurrency(adjustedB, currencyB) : "--";
+
+    simulatorResultB.textContent = `Si ganabas ${baseLabelB} hace ${monthsB} anios, hoy necesitarias ${adjustedLabelB}`;
+    simulatorResultB.classList.remove("is-hidden");
+  }
+}
+
+async function fetchInflationSeries(code) {
+  const indicator = "FP.CPI.TOTL.ZG";
+  const url = `https://api.worldbank.org/v2/country/${code}/indicator/${indicator}?format=json&per_page=60`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error("No se pudo cargar la serie");
+  }
+  const payload = await response.json();
+  const rows = Array.isArray(payload) ? payload[1] : null;
+  if (!Array.isArray(rows)) {
+    return [];
+  }
+
+  const filtered = rows.filter((row) => row.value !== null);
+  const trimmed = filtered.slice(0, 12).reverse();
+  return trimmed.map((row) => ({
+    month: String(row.date),
+    value: Number(row.value)
+  }));
+}
+
+async function loadCountryData(code) {
+  if (inflationCache.has(code)) {
+    return inflationCache.get(code);
+  }
+  const meta = COUNTRY_CATALOG.find((item) => item.code === code);
+  if (!meta) {
+    return null;
+  }
+  const series = await fetchInflationSeries(code);
+  const result = { ...meta, series };
+  inflationCache.set(code, result);
+  return result;
 }
 
 function setLegendNames(primary, secondary) {
@@ -370,11 +473,11 @@ function updateCompareDiff(primary, secondary) {
   compareDiff.classList.remove("is-hidden");
 }
 
-function init(data) {
+function init() {
   countrySelect.innerHTML = "";
   let activeCountry = null;
   let activeCountryB = null;
-  data.countries.forEach((country, index) => {
+  COUNTRY_CATALOG.forEach((country, index) => {
     const option = document.createElement("option");
     option.value = country.code;
     option.textContent = country.name;
@@ -391,7 +494,7 @@ function init(data) {
     emptyOption.textContent = "Sin comparacion";
     emptyOption.selected = true;
     countrySelectB.appendChild(emptyOption);
-    data.countries.forEach((country, index) => {
+    COUNTRY_CATALOG.forEach((country) => {
       const option = document.createElement("option");
       option.value = country.code;
       option.textContent = country.name;
@@ -399,28 +502,40 @@ function init(data) {
     });
   }
 
-  function renderSelected() {
-    const selected = data.countries.find((item) => item.code === countrySelect.value);
-    if (!selected) {
+  async function renderSelected() {
+    const selectedCode = countrySelect.value;
+    if (!selectedCode) {
       return;
     }
-    activeCountry = selected;
-    if (countrySelectB) {
-      activeCountryB = countrySelectB.disabled
-        ? null
-        : data.countries.find((item) => item.code === countrySelectB.value) || null;
+
+    try {
+      activeCountry = await loadCountryData(selectedCode);
+      if (countrySelectB && !countrySelectB.disabled && countrySelectB.value) {
+        activeCountryB = await loadCountryData(countrySelectB.value);
+      } else {
+        activeCountryB = null;
+      }
+    } catch (error) {
+      metrics.innerHTML = "<div class=\"card\"><small>Sin datos</small><h3>--</h3><small>Revisar API</small></div>";
+      return;
     }
-    renderMetrics(selected);
-    renderChart(selected, activeCountryB);
-    renderTable(selected);
-    setLegendNames(selected, activeCountryB);
-    updateCompareDiff(selected, activeCountryB);
-    updateSimulator(selected);
+
+    if (!activeCountry || !activeCountry.series.length) {
+      metrics.innerHTML = "<div class=\"card\"><small>Sin datos</small><h3>--</h3><small>Serie vacia</small></div>";
+      return;
+    }
+
+    renderMetrics(activeCountry);
+    renderChart(activeCountry, activeCountryB);
+    renderTable(activeCountry, activeCountryB);
+    setLegendNames(activeCountry, activeCountryB);
+    updateCompareDiff(activeCountry, activeCountryB);
+    updateSimulator(activeCountry, activeCountryB);
   }
 
   countrySelect.addEventListener("change", renderSelected);
   if (countrySelectB) {
-    const hasMultiple = data.countries.length > 1;
+    const hasMultiple = COUNTRY_CATALOG.length > 1;
     countrySelectB.disabled = !hasMultiple;
     countrySelectB.addEventListener("change", renderSelected);
     if (!hasMultiple) {
@@ -429,23 +544,18 @@ function init(data) {
     }
   }
   if (simulatorInput) {
-    simulatorInput.addEventListener("input", () => updateSimulator(activeCountry));
+    simulatorInput.addEventListener("input", () => updateSimulator(activeCountry, activeCountryB));
   }
   if (simulatorMonths) {
-    simulatorMonths.addEventListener("change", () => updateSimulator(activeCountry));
+    simulatorMonths.addEventListener("change", () => updateSimulator(activeCountry, activeCountryB));
   }
   if (simulatorReset && simulatorInput) {
     simulatorReset.addEventListener("click", () => {
       simulatorInput.value = "100000";
-      updateSimulator(activeCountry);
+      updateSimulator(activeCountry, activeCountryB);
     });
   }
   renderSelected();
 }
 
-fetch("data/inflacion.json")
-  .then((response) => response.json())
-  .then((data) => init(data))
-  .catch(() => {
-    metrics.innerHTML = "<div class=\"card\"><small>Sin datos</small><h3>--</h3><small>Revisar JSON</small></div>";
-  });
+init();
