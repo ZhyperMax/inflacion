@@ -146,6 +146,15 @@ input[type="number"]:focus {
   color: var(--muted);
 }
 
+.notice {
+  background: #fff5e8;
+  color: #8c4a1f;
+  border: 1px solid rgba(140, 74, 31, 0.2);
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+}
+
 .segmented {
   display: inline-flex;
   border: 1px solid var(--line);

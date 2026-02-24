@@ -17,6 +17,7 @@ const metricsToggle = document.getElementById("metricsToggle");
 const metricsBtnA = document.getElementById("metricsBtnA");
 const metricsBtnB = document.getElementById("metricsBtnB");
 const metricsTitle = document.getElementById("metricsTitle");
+const apiNotice = document.getElementById("apiNotice");
 const simulatorInput = document.getElementById("simAmount");
 const simulatorResult = document.getElementById("simResult");
 const simulatorResultB = document.getElementById("simResultB");
@@ -183,6 +184,14 @@ function updateMetricsToggle(primary, secondary) {
   }
 
   renderMetricsByView(primary, secondary);
+}
+
+function updateApiNotice(primary) {
+  if (!apiNotice) {
+    return;
+  }
+  const show = !primary || !primary.series || primary.series.length === 0;
+  apiNotice.classList.toggle("is-hidden", !show);
 }
 
 function renderTable(country, secondary) {
@@ -575,6 +584,7 @@ function init() {
           inflationCache.set(countrySelectB.value, { ...fallbackB, series: [] });
         }
       }
+      updateApiNotice(null);
       metrics.innerHTML = "<div class=\"card\"><small>Sin datos</small><h3>--</h3><small>Revisar API</small></div>";
       return;
     }
