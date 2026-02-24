@@ -60,6 +60,16 @@ body {
   color: var(--muted);
 }
 
+.source-badge {
+  background: var(--accent-soft);
+  border: 1px solid rgba(44, 111, 187, 0.2);
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  color: var(--accent);
+  font-weight: 500;
+}
+
 .container {
   padding: 0 8vw 80px;
   display: flex;
@@ -530,7 +540,12 @@ tbody tr:last-child td {
   .site-header {
     flex-direction: column;
     align-items: flex-start;
-    gap: 6px;
+    gap: 8px;
+  }
+  
+  .source-badge {
+    align-self: stretch;
+    text-align: center;
   }
 
   .hero {

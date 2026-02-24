@@ -145,8 +145,9 @@ function renderMetrics(country) {
   const isMensual = country.mode === "mensual";
   const periodLabel = isMensual ? "mes" : "anio";
   const periodPluralLabel = isMensual ? "meses" : "anios";
-  const cumulativeLabel = isMensual ? "12 meses" : "12 anios";
-  const averageLabel = isMensual ? "Promedio 12m" : "Promedio 12a";
+  const seriesLength = country.series.length;
+  const cumulativeLabel = isMensual ? `${seriesLength} meses` : `${seriesLength} anios`;
+  const averageLabel = isMensual ? `Promedio ${seriesLength}m` : `Promedio ${seriesLength}a`;
 
   const items = [
     {
@@ -155,7 +156,7 @@ function renderMetrics(country) {
       note: formatPeriodLabel(latest.period),
       trend: trend.hasData ? { label: trend.label, className: trend.className } : null
     },
-    { label: `Inflacion ${cumulativeLabel}`, value: formatPercent(cumulative), note: "Acumulado" },
+    { label: `Inflacion ${cumulativeLabel}`, value: formatPercent(cumulative), note: "Compuesta" },
     { label: averageLabel, value: formatPercent(average), note: "Media simple" }
   ];
 
@@ -236,7 +237,7 @@ function updateUITexts() {
     historyTitle.textContent = isMensual ? "Historial mensual" : "Historial anual";
   }
   if (historySubtitle) {
-    historySubtitle.textContent = `Ultimos 12 ${periodLabel} disponibles`;
+    historySubtitle.textContent = `Ultimos 12 ${periodLabel} disponibles. Inflacion compuesta = multiplicar factores.`;
   }
   if (simLabel) {
     simLabel.textContent = `Monto hace 12 ${periodLabel}`;
