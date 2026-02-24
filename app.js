@@ -515,6 +515,14 @@ async function loadCountryData(code) {
   return result;
 }
 
+function prefetchAllCountries() {
+  Promise.all(
+    COUNTRY_CATALOG.map((country) =>
+      loadCountryData(country.code).catch(() => null)
+    )
+  ).catch(() => null);
+}
+
 function setLegendNames(primary, secondary) {
   if (legendA) {
     legendA.textContent = primary ? primary.name : "-";
@@ -676,6 +684,7 @@ function init() {
     });
   }
   renderSelected();
+  prefetchAllCountries();
 }
 
 init();
