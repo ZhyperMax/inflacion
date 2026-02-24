@@ -109,6 +109,22 @@ select:focus {
   box-shadow: 0 0 0 3px rgba(192, 108, 60, 0.18);
 }
 
+input[type="number"] {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 12px 16px;
+  font-size: 1rem;
+  width: 100%;
+  transition: border var(--transition), box-shadow var(--transition);
+}
+
+input[type="number"]:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(44, 111, 187, 0.18);
+}
+
 .cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -139,6 +155,62 @@ select:focus {
   padding: 22px;
   box-shadow: var(--shadow);
   border: 1px solid rgba(234, 223, 211, 0.6);
+}
+
+.simulator-grid {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(240px, 1fr);
+  gap: 18px;
+  align-items: center;
+}
+
+.sim-input {
+  display: grid;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.sim-input-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.sim-input label {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.sim-result {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: clamp(1rem, 2.2vw, 1.4rem);
+  background: var(--accent-soft);
+  color: var(--ink);
+  padding: 16px 18px;
+  border-radius: 16px;
+}
+
+.btn-ghost {
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: border var(--transition), box-shadow var(--transition), transform var(--transition);
+}
+
+.btn-ghost:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.btn-ghost:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(44, 111, 187, 0.18);
 }
 
 .panel-header {

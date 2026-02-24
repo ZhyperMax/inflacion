@@ -52,6 +52,36 @@
         </div>
       </section>
 
+      <section class="panel simulator">
+        <div class="panel-header">
+          <div>
+            <h2>Simulador de poder adquisitivo</h2>
+            <p class="muted">Calcula cuanto necesitarias hoy para mantener el mismo poder de compra.</p>
+          </div>
+        </div>
+        <div class="simulator-grid">
+          <div class="sim-input">
+            <label for="simAmount">Monto hace 12 meses</label>
+            <div class="sim-input-row">
+              <input
+                id="simAmount"
+                type="number"
+                inputmode="numeric"
+                min="0"
+                step="1000"
+                value="100000"
+                aria-describedby="simHelp"
+              />
+              <button class="btn-ghost" type="button" id="simReset">Reset</button>
+            </div>
+            <small id="simHelp" class="muted">Usa el valor de referencia que quieras.</small>
+          </div>
+          <div class="sim-result" id="simResult">
+            Si ganabas $100.000 hace 12 meses, hoy necesitarias --
+          </div>
+        </div>
+      </section>
+
       <section class="panel">
         <div class="panel-header">
           <div>

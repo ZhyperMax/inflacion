@@ -4,6 +4,9 @@ const historyBody = document.getElementById("historyBody");
 const periodLabel = document.getElementById("periodLabel");
 const lastUpdated = document.getElementById("last-updated");
 const chart = document.getElementById("trendChart");
+const simulatorInput = document.getElementById("simAmount");
+const simulatorResult = document.getElementById("simResult");
+const simulatorReset = document.getElementById("simReset");
 
 const monthLabels = [
   "Ene",
@@ -38,6 +41,14 @@ function cumulativeInflation(series) {
 function averageInflation(series) {
   const sum = series.reduce((acc, item) => acc + item.value, 0);
   return sum / series.length;
+}
+
+function formatCurrency(value, currency) {
+  return new Intl.NumberFormat("es-AR", {
+    style: "currency",
+    currency,
+    maximumFractionDigits: 0
+  }).format(value);
 }
 
 function getTrendInfo(series) {
@@ -233,6 +244,22 @@ function renderChart(country) {
   });
 }
 
+function updateSimulator(country) {
+  if (!country || !simulatorInput || !simulatorResult) {
+    return;
+  }
+
+  const rawValue = Number(simulatorInput.value);
+  const base = Number.isFinite(rawValue) && rawValue > 0 ? rawValue : 0;
+  const cumulative = cumulativeInflation(country.series);
+  const adjusted = base * (1 + cumulative / 100);
+  const currency = country.currency || "ARS";
+  const baseLabel = formatCurrency(base, currency);
+  const adjustedLabel = base > 0 ? formatCurrency(adjusted, currency) : "--";
+
+  simulatorResult.textContent = `Si ganabas ${baseLabel} hace 12 meses, hoy necesitarias ${adjustedLabel}`;
+}
+
 function setLegendName(name) {
   const legend = document.querySelector(".legend span:last-child");
   if (legend) {
@@ -242,6 +269,7 @@ function setLegendName(name) {
 
 function init(data) {
   countrySelect.innerHTML = "";
+  let activeCountry = null;
   data.countries.forEach((country, index) => {
     const option = document.createElement("option");
     option.value = country.code;
@@ -257,13 +285,24 @@ function init(data) {
     if (!selected) {
       return;
     }
+    activeCountry = selected;
     renderMetrics(selected);
     renderChart(selected);
     renderTable(selected);
     setLegendName(selected.name);
+    updateSimulator(selected);
   }
 
   countrySelect.addEventListener("change", renderSelected);
+  if (simulatorInput) {
+    simulatorInput.addEventListener("input", () => updateSimulator(activeCountry));
+  }
+  if (simulatorReset && simulatorInput) {
+    simulatorReset.addEventListener("click", () => {
+      simulatorInput.value = "100000";
+      updateSimulator(activeCountry);
+    });
+  }
   renderSelected();
 }
 
