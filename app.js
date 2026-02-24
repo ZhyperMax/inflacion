@@ -27,6 +27,15 @@ const simulatorResult = document.getElementById("simResult");
 const simulatorResultB = document.getElementById("simResultB");
 const simulatorReset = document.getElementById("simReset");
 const simulatorMonths = document.getElementById("simMonths");
+const periodToggle = document.getElementById("periodToggle");
+const periodBtnAnual = document.getElementById("periodBtnAnual");
+const periodBtnMensual = document.getElementById("periodBtnMensual");
+const chartTitle = document.getElementById("chartTitle");
+const chartSubtitle = document.getElementById("chartSubtitle");
+const historyTitle = document.getElementById("historyTitle");
+const historySubtitle = document.getElementById("historySubtitle");
+const simLabel = document.getElementById("simLabel");
+const simSubtitle = document.getElementById("simSubtitle");
 
 const chartColors = {
   primary: "#2c6fbb",
@@ -47,6 +56,7 @@ const COUNTRY_CATALOG = [
 const inflationCache = new Map();
 const prefetchStatus = new Map();
 let metricsView = "A";
+let periodMode = "anual";
 
 const monthLabels = [
   "Ene",
@@ -125,16 +135,22 @@ function renderMetrics(country) {
   const average = averageInflation(country.series);
   const trend = getTrendInfo(country.series);
   metrics.innerHTML = "";
+  
+  const isMensual = country.mode === "mensual";
+  const periodLabel = isMensual ? "mes" : "anio";
+  const periodPluralLabel = isMensual ? "meses" : "anios";
+  const cumulativeLabel = isMensual ? "12 meses" : "12 anios";
+  const averageLabel = isMensual ? "Promedio 12m" : "Promedio 12a";
 
   const items = [
     {
-      label: "Ultimo anio",
+      label: `Ultimo ${periodLabel}`,
       value: formatPercent(latest.value),
       note: formatPeriodLabel(latest.period),
       trend: trend.hasData ? { label: trend.label, className: trend.className } : null
     },
-    { label: "Inflacion 12 anios", value: formatPercent(cumulative), note: "Acumulado" },
-    { label: "Promedio 12a", value: formatPercent(average), note: "Media simple" }
+    { label: `Inflacion ${cumulativeLabel}`, value: formatPercent(cumulative), note: "Acumulado" },
+    { label: averageLabel, value: formatPercent(average), note: "Media simple" }
   ];
 
   items.forEach((item, index) => {
@@ -197,6 +213,55 @@ function updateApiNotice(primary) {
   }
   const show = !primary || !primary.series || primary.series.length === 0;
   apiNotice.classList.toggle("is-hidden", !show);
+}
+
+function updateUITexts() {
+  const isMensual = periodMode === "mensual";
+  const periodLabel = isMensual ? "meses" : "anios";
+  const periodSingular = isMensual ? "mes" : "anio";
+  
+  if (chartTitle) {
+    chartTitle.textContent = `Trayectoria 12 ${periodLabel}`;
+  }
+  if (chartSubtitle) {
+    chartSubtitle.textContent = isMensual ? "Variacion mensual en porcentaje" : "Variacion anual en porcentaje";
+  }
+  if (historyTitle) {
+    historyTitle.textContent = isMensual ? "Historial mensual" : "Historial anual";
+  }
+  if (historySubtitle) {
+    historySubtitle.textContent = `Ultimos 12 ${periodLabel} disponibles`;
+  }
+  if (simLabel) {
+    simLabel.textContent = `Monto hace 12 ${periodLabel}`;
+  }
+  if (simSubtitle) {
+    simSubtitle.textContent = "Calcula cuanto necesitarias hoy para mantener el mismo poder de compra.";
+  }
+  
+  if (simulatorMonths) {
+    const currentValue = simulatorMonths.value;
+    simulatorMonths.innerHTML = `
+      <option value="3">3 ${periodLabel}</option>
+      <option value="6">6 ${periodLabel}</option>
+      <option value="12">12 ${periodLabel}</option>
+    `;
+    simulatorMonths.value = currentValue;
+  }
+}
+
+function updatePeriodToggleVisibility(selectedCode) {
+  if (!periodToggle) return;
+  
+  const showToggle = selectedCode === "AR";
+  periodToggle.classList.toggle("is-hidden", !showToggle);
+  
+  if (!showToggle && periodMode === "mensual") {
+    periodMode = "anual";
+    periodBtnAnual.classList.add("is-active");
+    periodBtnMensual.classList.remove("is-active");
+    updateUITexts();
+  }
 }
 
 function setLoading(isLoading) {
@@ -448,6 +513,9 @@ function updateSimulator(country, secondary) {
     return;
   }
 
+  const isMensual = country.mode === "mensual";
+  const periodLabel = isMensual ? "meses" : "anios";
+  
   const rawValue = Number(simulatorInput.value);
   const base = Number.isFinite(rawValue) && rawValue > 0 ? rawValue : 0;
   const requestedMonths = simulatorMonths ? Number(simulatorMonths.value) : 12;
@@ -459,7 +527,7 @@ function updateSimulator(country, secondary) {
   const baseLabel = formatCurrency(base, currency);
   const adjustedLabel = base > 0 ? formatCurrency(adjusted, currency) : "--";
 
-  simulatorResult.textContent = `Si ganabas ${baseLabel} hace ${months} anios, hoy necesitarias ${adjustedLabel}`;
+  simulatorResult.textContent = `Si ganabas ${baseLabel} hace ${months} ${periodLabel}, hoy necesitarias ${adjustedLabel}`;
 
   if (simulatorResultB) {
     if (!secondary) {
@@ -467,6 +535,9 @@ function updateSimulator(country, secondary) {
       return;
     }
 
+    const isMensualB = secondary.mode === "mensual";
+    const periodLabelB = isMensualB ? "meses" : "anios";
+    
     const monthsB = Math.max(1, Math.min(secondary.series.length, requestedMonths || 12));
     const seriesSliceB = secondary.series.slice(-monthsB);
     const cumulativeB = cumulativeInflation(seriesSliceB);
@@ -475,9 +546,27 @@ function updateSimulator(country, secondary) {
     const baseLabelB = formatCurrency(base, currencyB);
     const adjustedLabelB = base > 0 ? formatCurrency(adjustedB, currencyB) : "--";
 
-    simulatorResultB.textContent = `Si ganabas ${baseLabelB} hace ${monthsB} anios, hoy necesitarias ${adjustedLabelB}`;
+    simulatorResultB.textContent = `Si ganabas ${baseLabelB} hace ${monthsB} ${periodLabelB}, hoy necesitarias ${adjustedLabelB}`;
     simulatorResultB.classList.remove("is-hidden");
   }
+}
+
+async function fetchMonthlyInflationAR() {
+  const seriesId = "103.1_I2N_2016_M_15";
+  const url = `https://apis.datos.gob.ar/series/api/series?ids=${seriesId}:percent_change&last=12`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error("No se pudo cargar la serie mensual");
+  }
+  const payload = await response.json();
+  if (!payload.data || payload.data.length === 0) {
+    return [];
+  }
+  
+  return payload.data.map(row => ({
+    period: row[0],
+    value: row[1] !== null ? Number(row[1]) : 0
+  }));
 }
 
 async function fetchInflationSeries(code) {
@@ -504,16 +593,30 @@ async function fetchInflationSeries(code) {
 }
 
 async function loadCountryData(code) {
-  if (inflationCache.has(code)) {
-    return inflationCache.get(code);
+  const cacheKey = `${code}-${periodMode}`;
+  if (inflationCache.has(cacheKey)) {
+    return inflationCache.get(cacheKey);
   }
   const meta = COUNTRY_CATALOG.find((item) => item.code === code);
   if (!meta) {
     return null;
   }
-  const series = await fetchInflationSeries(code);
-  const result = { ...meta, series };
-  inflationCache.set(code, result);
+  
+  let series;
+  if (code === "AR" && periodMode === "mensual") {
+    series = await fetchMonthlyInflationAR();
+  } else {
+    series = await fetchInflationSeries(code);
+  }
+  
+  const result = { ...meta, series, mode: periodMode };
+  inflationCache.set(cacheKey, result);
+  
+  if (prefetchStatus.has(code)) {
+    prefetchStatus.set(code, "ready");
+    updateOptionStatus(code);
+  }
+  
   return result;
 }
 
@@ -606,6 +709,9 @@ function init() {
   countrySelect.innerHTML = "";
   let activeCountry = null;
   let activeCountryB = null;
+  
+  updateUITexts();
+  
   COUNTRY_CATALOG.forEach((country, index) => {
     const option = document.createElement("option");
     option.value = country.code;
@@ -639,13 +745,17 @@ function init() {
       setLoading(false);
       return;
     }
+    
+    updatePeriodToggleVisibility(selectedCode);
 
     setLoading(true);
 
     if (forceRefresh) {
-      inflationCache.delete(selectedCode);
+      const cacheKeyA = `${selectedCode}-${periodMode}`;
+      inflationCache.delete(cacheKeyA);
       if (countrySelectB && countrySelectB.value) {
-        inflationCache.delete(countrySelectB.value);
+        const cacheKeyB = `${countrySelectB.value}-${periodMode}`;
+        inflationCache.delete(cacheKeyB);
       }
     }
 
@@ -738,6 +848,36 @@ function init() {
       renderSelected(true);
     });
   }
+  
+  if (periodBtnAnual) {
+    periodBtnAnual.addEventListener("click", () => {
+      if (periodMode === "anual") return;
+      periodMode = "anual";
+      periodBtnAnual.classList.add("is-active");
+      periodBtnMensual.classList.remove("is-active");
+      inflationCache.clear();
+      updateUITexts();
+      renderSelected(true);
+    });
+  }
+  
+  if (periodBtnMensual) {
+    periodBtnMensual.addEventListener("click", () => {
+      if (periodMode === "mensual") return;
+      const selectedCode = countrySelect.value;
+      if (selectedCode !== "AR") {
+        alert("Los datos mensuales solo están disponibles para Argentina. Por favor, selecciona Argentina en el selector de país A.");
+        return;
+      }
+      periodMode = "mensual";
+      periodBtnMensual.classList.add("is-active");
+      periodBtnAnual.classList.remove("is-active");
+      inflationCache.clear();
+      updateUITexts();
+      renderSelected(true);
+    });
+  }
+  
   renderSelected();
   prefetchAllCountries();
 }

@@ -24,8 +24,8 @@
         <div>
           <h1>Seguimiento de inflacion por pais</h1>
           <p>
-            Lectura clara y minimalista para comparar la dinamica anual.
-            Empezamos con Argentina.
+            Lectura clara y minimalista para comparar la dinamica inflacionaria.
+            Datos anuales (World Bank) y mensuales para Argentina (datos.gob.ar).
           </p>
         </div>
         <div class="hero-actions">
@@ -35,6 +35,12 @@
           <select id="countrySelectB" aria-label="Seleccionar pais B">
             <option value="">Sin comparacion</option>
           </select>
+        </div>
+        <div class="period-toggle is-hidden" id="periodToggle">
+          <div class="segmented">
+            <button class="segmented-btn is-active" type="button" id="periodBtnAnual">Anual</button>
+            <button class="segmented-btn" type="button" id="periodBtnMensual">Mensual (solo Argentina)</button>
+          </div>
         </div>
       </section>
 
@@ -61,8 +67,8 @@
       <section class="panel">
         <div class="panel-header">
           <div>
-            <h2>Trayectoria 12 anios</h2>
-            <p class="muted">Variacion anual en porcentaje</p>
+            <h2 id="chartTitle">Trayectoria 12 anios</h2>
+            <p class="muted" id="chartSubtitle">Variacion anual en porcentaje</p>
           </div>
           <div class="chart-meta">
             <div class="legend">
@@ -87,12 +93,12 @@
         <div class="panel-header">
           <div>
             <h2>Simulador de poder adquisitivo</h2>
-            <p class="muted">Calcula cuanto necesitarias hoy para mantener el mismo poder de compra.</p>
+            <p class="muted" id="simSubtitle">Calcula cuanto necesitarias hoy para mantener el mismo poder de compra.</p>
           </div>
         </div>
         <div class="simulator-grid">
           <div class="sim-input">
-            <label for="simAmount">Monto hace 12 anios</label>
+            <label for="simAmount" id="simLabel">Monto hace 12 anios</label>
             <div class="sim-input-row">
               <input
                 id="simAmount"
@@ -126,8 +132,8 @@
       <section class="panel">
         <div class="panel-header">
           <div>
-            <h2>Historial anual</h2>
-            <p class="muted">Ultimos 12 anios disponibles</p>
+            <h2 id="historyTitle">Historial anual</h2>
+            <p class="muted" id="historySubtitle">Ultimos 12 anios disponibles</p>
           </div>
           <div class="pill" id="periodLabel">Periodo: --</div>
         </div>
@@ -165,7 +171,7 @@
     </main>
 
     <footer class="site-footer">
-      <p>Datos: World Bank (FP.CPI.TOTL.ZG). Visualización propia.</p>
+      <p>Datos: World Bank (FP.CPI.TOTL.ZG) y datos.gob.ar (103.1_I2N_2016_M_15). Visualización propia.</p>
     </footer>
 
     <script src="app.js"></script>

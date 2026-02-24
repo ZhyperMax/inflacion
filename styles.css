@@ -96,6 +96,12 @@ body {
   color: var(--muted);
 }
 
+.period-toggle {
+  margin-top: 12px;
+  display: flex;
+  justify-content: center;
+}
+
 select {
   background: var(--card);
   border: 1px solid var(--line);
