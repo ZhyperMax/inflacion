@@ -60,6 +60,30 @@ body {
   color: var(--muted);
 }
 
+.site-footer {
+  padding: 22px 8vw;
+  background: transparent;
+}
+
+.site-footer .footer-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.site-footer p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.site-footer .credit {
+  color: var(--muted);
+  font-size: 0.8rem;
+  opacity: 0.9;
+}
+
 .source-badge {
   background: var(--accent-soft);
   border: 1px solid rgba(44, 111, 187, 0.2);
